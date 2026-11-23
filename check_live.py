@@ -176,23 +176,33 @@ def save_members(db, cipher):
     )
 
 
+
 def configure(db, chat_id, artists, note=""):
     members = db["members"]
 
     if artists:
         members[chat_id] = artists
+        selected = selection_label(artists)
+
+        message = (
+            "✅ ระบบได้รับข้อมูลเรียบร้อยแล้ว! 💗\n\n"
+            f"🔔 การแจ้งเตือนที่เลือก: {selected}\n\n"
+            "เมื่อระบบตรวจพบ TikTok LIVE "
+            "ของศิลปินที่เลือก "
+            "จะส่งแจ้งเตือนให้คุณอัตโนมัติ\n\n"
+            "เปลี่ยนการตั้งค่าได้ด้วย /start"
+        )
     else:
         members.pop(chat_id, None)
 
-    prefix = (note + "\n") if note else ""
+        message = (
+            "🔕 ปิดการแจ้งเตือนเรียบร้อยแล้ว\n\n"
+            "คุณสามารถสมัครใหม่ได้ทุกเมื่อ "
+            "ด้วย /start 💗"
+        )
 
-    send(
-        chat_id,
-        f"{prefix}💗 ตั้งค่าการแจ้งเตือน: "
-        f"{selection_label(artists)}\n"
-        "เปลี่ยนได้ทุกเมื่อด้วย /start",
-        with_menu=True,
-    )
+    send(chat_id, message, with_menu=True)
+
 
 
 def process_updates(db):
