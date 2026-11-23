@@ -27,15 +27,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Sync latest main before checking updates
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
 
       - name: Check TikTok LIVE
         env:
@@ -44,9 +47,6 @@ jobs:
           SUBSCRIBERS_KEY: ${{ secrets.SUBSCRIBERS_KEY }}
           TEST_MESSAGE: ${{ inputs.test_message && '1' || '0' }}
         run: python check_live.py
-
-
-
 
       - name: Save LIVE state and subscribers
         run: |
@@ -57,9 +57,6 @@ jobs:
 
           if ! git diff --cached --quiet; then
             git commit -m "Save LIVE state and encrypted subscribers [skip ci]"
-
-            git pull --rebase origin main
-
             git push origin HEAD:main
           else
             echo "No changes to save"
