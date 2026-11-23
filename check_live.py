@@ -25,6 +25,7 @@ TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 OWNER_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 
 
+
 def api(method, params):
     if not TOKEN:
         raise RuntimeError("Missing TELEGRAM_BOT_TOKEN secret")
@@ -38,32 +39,47 @@ def api(method, params):
         for k, v in params.items()
     }).encode()
 
-    req = Request(
-        f"https://api.telegram.org/bot{TOKEN}/{method}",
-        data=data,
-        method="POST",
-    )
-
-    try:
-        with urlopen(req, timeout=25) as response:
-            payload = json.load(response)
-    except HTTPError as exc:
-        detail = exc.read().decode(errors="replace")[:250]
-        raise RuntimeError(
-            f"Telegram {method} returned HTTP {exc.code}: {detail}"
-        ) from None
-    except URLError as exc:
-        raise RuntimeError(
-            f"Telegram {method} network failure: {exc.reason}"
-        ) from None
-
-    if not payload.get("ok"):
-        raise RuntimeError(
-            f"Telegram {method}: "
-            f"{payload.get('description', 'unknown error')}"
+    for attempt in range(1, 4):
+        req = Request(
+            f"https://api.telegram.org/bot{TOKEN}/{method}",
+            data=data,
+            method="POST",
         )
 
-    return payload["result"]
+        try:
+            with urlopen(req, timeout=25) as response:
+                payload = json.load(response)
+
+            if not payload.get("ok"):
+                raise RuntimeError(
+                    f"Telegram {method}: "
+                    f"{payload.get('description', 'unknown error')}"
+                )
+
+            return payload["result"]
+
+        except HTTPError as exc:
+            detail = exc.read().decode(
+                errors="replace"
+            )[:250]
+            raise RuntimeError(
+                f"Telegram {method} returned HTTP "
+                f"{exc.code}: {detail}"
+            ) from None
+
+        except (URLError, OSError, TimeoutError) as exc:
+            if attempt == 3:
+                raise RuntimeError(
+                    f"Telegram {method} network failure "
+                    f"after 3 attempts: {type(exc).__name__}"
+                ) from None
+
+            print(
+                f"Telegram {method} connection failed. "
+                f"Retry {attempt}/2"
+            )
+            time.sleep(attempt * 2)
+
 
 
 def menu():
