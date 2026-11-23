@@ -34,7 +34,7 @@ async def get_live(username: str):
         return None  # never treat failed checks as offline
     finally:
         try:
-            await client.close()
+            await client.disconnect()
         except (AttributeError, Exception):
             pass
 
