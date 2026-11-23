@@ -2,7 +2,11 @@
 name: KaoJane LIVE Alert
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  inputs:
+      test_message:
+        description: "Send Telegram test message"
+        type: boolean
+        default: false
   schedule:
     - cron: "*/10 * * * *"
 
@@ -34,6 +38,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_MESSAGE: ${{ inputs.test_message && '1' || '0' }}
         run: python check_live.py
 
       - name: Save LIVE state
