@@ -2,7 +2,8 @@
 name: KaoJane LIVE Alert
 
 on:
-  workflow_dispatch:  inputs:
+  workflow_dispatch:
+    inputs:
       test_message:
         description: "Send Telegram test message"
         type: boolean
